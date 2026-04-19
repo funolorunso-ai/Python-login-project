@@ -5,15 +5,25 @@ from os import path
 from flask_login import LoginManager
 
 db = SQLAlchemy()
-DB_NAME = "database.db"
 
 
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'bigtokz-secret-key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    
+    postgres_url = os.environ.get('POSTGRES_URL')
+    
+    if postgres_url:
+        if postgres_url.startswith("postgres://"):
+            postgres_url = postgres_url.replace("postgres://", "postgresql://", 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = postgres_url
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
     
+
     
     from .views import views
     from .auth import auth
@@ -23,7 +33,10 @@ def create_app():
     
     from .models import User, Note
     
-    create_database(app)
+    with app.app_context():
+        db.create_all()
+    
+
     
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
@@ -35,9 +48,3 @@ def create_app():
         return User.query.get(int(id))
     
     return app
-
-def create_database(app):
-    with app.app_context():
-        if not path.exists('website/' + DB_NAME):
-            db.create_all()
-            print('Created Database!')
