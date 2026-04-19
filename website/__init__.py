@@ -8,13 +8,17 @@ db = SQLAlchemy()
 
 
 def create_app():
+    import os
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'bigtokz-secret-key')
     
+    print("Vercel env keys:", sorted([k for k in os.environ.keys() if not k.startswith('_')]))
+    
     postgres_url = os.environ.get('POSTGRES_URL')
+    print("POSTGRES_URL value:", postgres_url)
     
     if not postgres_url:
-        raise ValueError("POSTGRES_URL environment variable is not set. Check Vercel env vars.")
+        raise ValueError("POSTGRES_URL is None. Go to Vercel , settings, environment variables, add POSTGRES_URL for Production, Redeploy")
     
     if postgres_url.startswith("postgres://"):
         postgres_url = postgres_url.replace("postgres://", "postgresql://", 1)
