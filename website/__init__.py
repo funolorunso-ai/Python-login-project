@@ -13,17 +13,15 @@ def create_app():
     
     postgres_url = os.environ.get('POSTGRES_URL')
     
-    if postgres_url:
-        if postgres_url.startswith("postgres://"):
-            postgres_url = postgres_url.replace("postgres://", "postgresql://", 1)
-        app.config['SQLALCHEMY_DATABASE_URI'] = postgres_url
-    else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    if not postgres_url:
+        raise ValueError("POSTGRES_URL environment variable is not set. Check Vercel env vars.")
     
+    if postgres_url.startswith("postgres://"):
+        postgres_url = postgres_url.replace("postgres://", "postgresql://", 1)
+        
+    app.config['SQLALCHEMY_DATABASE-URI'] = postgres_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
-    
-
     
     from .views import views
     from .auth import auth
